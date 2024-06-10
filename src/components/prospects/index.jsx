@@ -24,12 +24,19 @@ export class ProspectsIndex extends Component {
     if (!!this.props.prospect.name) {
       if (!this.props.prospect.file && this.state.attachments && this.state.attachments.length > 0) {
         this.uploadFiles()
+      } else {
+        this.props.getProspects({ page: 1 });
       }
     }
   }
 
   selectedProspect = prospect => {
-    this.setState({ prospect, showModal: true })
+    console.log("prospect: ",prospect)
+    console.log("estatus: ",prospect.status !== 1)
+    this.setState({
+      prospect: { ...prospect, statusReadOnly: prospect.status !== 0 },
+      showModal: true
+    })
   }
 
   openFormModal = () => {

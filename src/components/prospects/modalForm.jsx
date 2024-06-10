@@ -6,8 +6,9 @@ export class ProspectModalForm extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      validated: false,
-      attachments: []
+      attachments: [],
+      statusReadOnly: false,
+      validated: false
     }
   }
 
@@ -56,7 +57,7 @@ export class ProspectModalForm extends Component {
   render() {
     let { validated } = this.state
     let { showModal, prospect, handleInputChange } = this.props;
-    let { name, middle_name, last_name, street, ext_number, neighborhood, zip_code, phone_number, rfc, files } = prospect;
+    let { name, middle_name, last_name, street, ext_number, neighborhood, zip_code, phone_number, rfc, files, status, statusReadOnly } = prospect;
     return (
       <Modal show={showModal} onHide={() => this.close()} >
         <Modal.Header closeButton>
@@ -216,17 +217,22 @@ export class ProspectModalForm extends Component {
                   </a>
                 </p>
               )}
-              <Form.Select>
-                <option value="0">
-                  Enviado
-                </option>
-                <option value="1">
-                  Autorizado
-                </option>
-                <option value="2">
-                  Rechazado
-                </option>
-              </Form.Select>
+              {statusReadOnly.toString()}
+              <Form.Group controlId="status">
+                <Form.Select value={status} disabled={statusReadOnly}
+                  onChange={handleInputChange}>
+                  <option value={0}>
+                    Enviado
+                  </option>
+                  <option value={1}>
+                    Autorizado
+                  </option>
+                  <option value={2}>
+                    Rechazado
+                  </option>
+                </Form.Select>
+              </Form.Group>
+
             </Form>
           }
         </Modal.Body>
