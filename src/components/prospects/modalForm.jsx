@@ -391,6 +391,9 @@ export class ProspectModalForm extends Component {
           }
         </Modal.Body>
         <Modal.Footer>
+        <Button variant="danger" onClick={() => this.handleClose()}>
+            Salir
+          </Button>
           <Button variant="success" onClick={() => this.submit()}>
             Enviar
           </Button>
