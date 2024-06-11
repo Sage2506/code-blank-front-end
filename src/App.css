@@ -36,3 +36,11 @@
     transform: rotate(360deg);
   }
 }
+
+.capitalize {
+  text-transform: capitalize;
+}
+
+.uppercase {
+  text-transform: uppercase;
+}

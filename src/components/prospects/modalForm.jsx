@@ -6,7 +6,9 @@ export class ProspectModalForm extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      attachmentIsMissing: false,
       attachments: [],
+      rfcIsValid: true,
       statusReadOnly: false,
       validated: false
     }
@@ -24,20 +26,102 @@ export class ProspectModalForm extends Component {
 
   submit = () => {
     this.setState({ validated: true });
-    let { name, middle_name, last_name, street, ext_number, neighborhood, zip_code, phone_number, rfc } = this.props.prospect;
-    if (
-      name?.length > 0 &&
-      middle_name?.length > 0 &&
-      street?.length > 0 &&
-      ext_number?.length > 0 &&
-      neighborhood?.length > 0 &&
-      zip_code?.length > 0 &&
-      phone_number?.length > 0 &&
-      rfc?.length > 0) {
-      this.props.submit([...this.state.attachments])
-      this.setState({ validated: false, attachments: [] })
+    let { name, middle_name, last_name, street, ext_number, neighborhood, zip_code, phone_number, rfc, status } = this.props.prospect;
+    let isValid = true;
+    if (!!this.props.prospect.id) {
+      console.log("entered update validation: ", this.props.prospect.rejection_reason.length)
+      console.log("status : ",status)
+      console.log("status type: ",typeof status)
+      if (status === "2" && this.props.prospect.rejection_reason.length === 0) { isValid = false }
+      if (isValid) {
+        this.props.submit([...this.state.attachments])
+        this.setState({
+          attachmentIsMissing: false,
+          attachments: [],
+          rfcIsValid: true,
+          statusReadOnly: false,
+          validated: false
+        });
+      }
     } else {
-      console.log("something is missing")
+      if (
+        name?.length === 0 ||
+        middle_name?.length === 0 ||
+        street?.length === 0 ||
+        ext_number?.length === 0 ||
+        neighborhood?.length === 0 ||
+        zip_code?.length < 5 ||
+        phone_number?.length > 10 ||
+        phone_number?.length < 7 ||
+        rfc?.length < 12) {
+        isValid = false
+      }
+
+
+      const rfcRegExp = /^([A-Z,Ñ,&]{3,4}([0-9]{2})(0[1-9]|1[0-2])(0[1-9]|1[0-9]|2[0-9]|3[0-1])[A-Z|\d]{3})$/;
+      const testResult = rfcRegExp.test(rfc)
+      if (testResult) {
+        this.setState({ rfcIsValid: true })
+      } else {
+        this.setState({ rfcIsValid: false })
+        isValid = false
+      }
+      let hasAtLeastOneAttachment = false;
+      this.state.attachments.forEach(attachment => {
+        if (attachment.attachment_name.length !== 0) { hasAtLeastOneAttachment = true }
+      })
+      if (!hasAtLeastOneAttachment) {
+        isValid = false
+        this.setState({ attachmentIsMissing: true })
+      } else {
+        this.setState({ attachmentIsMissing: false })
+      }
+      if (isValid) {
+        this.props.submit([...this.state.attachments])
+        this.setState({
+          attachmentIsMissing: false,
+          attachments: [],
+          rfcIsValid: true,
+          statusReadOnly: false,
+          validated: false
+        });
+      }
+    }
+  }
+
+  validateLettersOnly = (event) => {
+    let regexp = /^[a-zA-Z]+$/;
+    if (event.key === " ") return true;
+    this.validateRegexp(event, regexp)
+  }
+
+  validateNumbersOnly = (event) => {
+    let regexp = /^[0-9]+$/;
+    this.validateRegexp(event, regexp)
+  }
+
+  validateLettersAndNumbersOnly = (event) => {
+    let regexp = /^[a-zA-Z0-9]+$/;
+    if (event.key === " ") return true;
+    this.validateRegexp(event, regexp)
+  }
+
+  validateSpecialChars = (event) => {
+    let regexp = /^[a-zA-Z0-9,#:.]+$/;
+    if (event.key === " ") return true;
+    this.validateRegexp(event, regexp)
+  }
+
+  validateRegexp = (event, regexp) => {
+    if (event.key === "Tab" || event.key === "Backspace") {
+      return true
+    }
+    const result = regexp.test(event.key)
+    if (result) {
+      return true
+    } else {
+      event.preventDefault()
+      return false;
     }
   }
 
@@ -49,6 +133,40 @@ export class ProspectModalForm extends Component {
     this.setState({ attachments });
   }
 
+  isFormClear = () => {
+    let clear = true
+    let { name, middle_name, last_name, street, ext_number, neighborhood, zip_code, phone_number, rfc, files } = this.props.prospect;
+    if (
+      name?.length > 0 ||
+      middle_name?.length > 0 ||
+      street?.length > 0 ||
+      ext_number?.length > 0 ||
+      neighborhood?.length > 0 ||
+      zip_code?.length > 0 ||
+      phone_number?.length > 0 ||
+      rfc?.length > 0
+    ) { clear = false }
+    if (clear) {
+      this.state.attachments.forEach(attachment => {
+        if (attachment.attachment_name.length > 0) {
+          clear = false
+        }
+      })
+    }
+    return clear;
+  }
+
+  handleClose = () => {
+    if (!!this.props.prospect.id || this.isFormClear()) {
+      this.close();
+    } else {
+      const result = window.confirm("Al salir se perderá toda la captura!\n¿Seguro que desea salir?");
+      if (result) {
+        this.close();
+      }
+    }
+  }
+
   close = () => {
     this.setState({ validated: false })
     this.props.close()
@@ -57,130 +175,152 @@ export class ProspectModalForm extends Component {
   render() {
     let { validated } = this.state
     let { showModal, prospect, handleInputChange } = this.props;
-    let { name, middle_name, last_name, street, ext_number, neighborhood, zip_code, phone_number, rfc, files, status, statusReadOnly } = prospect;
+    let { name, middle_name, last_name, street, ext_number, neighborhood, zip_code, phone_number, rfc, files, status, statusReadOnly, rejection_reason } = prospect;
     return (
-      <Modal show={showModal} onHide={() => this.close()} >
+      <Modal show={showModal} onHide={() => this.handleClose()} >
         <Modal.Header closeButton>
           <Modal.Title>Formulario</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {!prospect.id &&
-            <Form onSubmit={this.submit} validated={validated}>
+            <Form noValidate onSubmit={this.submit} >
               <Form.Group controlId="name">
                 <Form.Control
-                  type="text"
-                  required
-                  value={name || ""}
-                  placeholder="Nombre"
+                  className={(validated && name?.length === 0) ? "is-invalid" : ""}
                   maxLength={150}
                   onChange={handleInputChange}
-                  isValid={name?.length > 0} />
+                  onKeyDown={this.validateLettersOnly}
+                  onPaste={(e: any) => { e.preventDefault(); return false; }}
+                  placeholder="Nombre"
+                  type="text"
+                  value={name || ""}
+                />
                 <Form.Control.Feedback type="invalid">
                   Este campo es obligatorio
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group controlId="middle_name">
                 <Form.Control
-                  type="text"
-                  required
-                  value={middle_name || ""}
-                  placeholder="Apellido materno"
-                  onChange={handleInputChange}
+                  className={(validated && middle_name?.length === 0) ? "is-invalid" : ""}
                   maxLength={150}
-                  isValid={middle_name?.length > 0} />
+                  onChange={handleInputChange}
+                  onKeyDown={this.validateLettersOnly}
+                  onPaste={(e: any) => { e.preventDefault(); return false; }}
+                  placeholder="Apellido materno"
+                  type="text"
+                  value={middle_name || ""}
+                />
                 <Form.Control.Feedback type="invalid">
                   Este campo es obligatorio
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group controlId="last_name">
                 <Form.Control
+                  maxLength={150}
+                  onChange={handleInputChange}
+                  onKeyDown={this.validateLettersOnly}
+                  onPaste={(e: any) => { e.preventDefault(); return false; }}
+                  placeholder="Apellido paterno"
                   type="text"
                   value={last_name || ""}
-                  placeholder="Apellido paterno"
-                  maxLength={150}
-                  onChange={handleInputChange} />
+                />
               </Form.Group>
               <Form.Group controlId="street">
                 <Form.Control
-                  type="text"
-                  required
-                  value={street || ""}
-                  placeholder="Calle"
-                  onChange={handleInputChange}
+                  className={(validated && street?.length === 0) ? "is-invalid" : ""}
                   maxLength={150}
-                  isValid={street?.length > 0} />
+                  onChange={handleInputChange}
+                  onKeyDown={this.validateSpecialChars}
+                  onPaste={(e: any) => { e.preventDefault(); return false; }}
+                  placeholder="Calle"
+                  type="text"
+                  value={street || ""}
+                />
                 <Form.Control.Feedback type="invalid">
                   Este campo es obligatorio
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group controlId="ext_number">
                 <Form.Control
-                  type="text"
-                  required
-                  value={ext_number || ""}
-                  placeholder="Numero"
-                  onChange={handleInputChange}
+                  className={(validated && ext_number?.length === 0) ? "is-invalid" : ""}
                   maxLength={150}
-                  isValid={ext_number?.length > 0} />
+                  onChange={handleInputChange}
+                  onKeyDown={this.validateNumbersOnly}
+                  onPaste={(e: any) => { e.preventDefault(); return false; }}
+                  placeholder="Numero"
+                  type="text"
+                  value={ext_number || ""}
+                />
                 <Form.Control.Feedback type="invalid">
                   Este campo es obligatorio
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group controlId="neighborhood">
                 <Form.Control
-                  type="text"
-                  required
-                  value={neighborhood || ""}
-                  placeholder="Colonia"
-                  onChange={handleInputChange}
+                  className={(validated && neighborhood?.length === 0) ? "is-invalid" : ""}
                   maxLength={150}
-                  isValid={neighborhood?.length > 0} />
+                  onChange={handleInputChange}
+                  onKeyDown={this.validateSpecialChars}
+                  onPaste={(e: any) => { e.preventDefault(); return false; }}
+                  placeholder="Colonia"
+                  type="text"
+                  value={neighborhood || ""}
+                />
                 <Form.Control.Feedback type="invalid">
                   Este campo es obligatorio
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group controlId="zip_code">
                 <Form.Control
-                  type="text"
-                  required
-                  value={zip_code || ""}
-                  placeholder="Codigo postal"
-                  onChange={handleInputChange}
+                  className={(validated && zip_code?.length === 0) ? "is-invalid" : ""}
                   maxLength={10}
-                  isValid={zip_code?.length > 0} />
+                  onChange={handleInputChange}
+                  onKeyDown={this.validateNumbersOnly}
+                  onPaste={(e: any) => { e.preventDefault(); return false; }}
+                  placeholder="Codigo postal"
+                  type="text"
+                  value={zip_code || ""}
+                />
                 <Form.Control.Feedback type="invalid">
                   Este campo es obligatorio
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group controlId="phone_number">
                 <Form.Control
-                  type="text"
-                  required
-                  value={phone_number || ""}
-                  placeholder="Telefono"
-                  onChange={handleInputChange}
+                  className={(validated && phone_number?.length < 7) ? "is-invalid" : ""}
                   maxLength={10}
                   minLength={7}
-                  isValid={phone_number?.length > 0} />
+                  onChange={handleInputChange}
+                  onKeyDown={this.validateNumbersOnly}
+                  onPaste={(e: any) => { e.preventDefault(); return false; }}
+                  placeholder="Telefono"
+                  type="text"
+                  value={phone_number || ""}
+                />
                 <Form.Control.Feedback type="invalid">
                   Este campo es obligatorio
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group controlId="rfc">
                 <Form.Control
-                  type="text"
-                  required
-                  value={rfc || ""}
-                  placeholder="RFC"
+                  className={(validated && !this.state.rfcIsValid) ? "is-invalid" : ""}
+                  maxLength={13}
+                  minLength={13}
                   onChange={handleInputChange}
-                  maxLength={12}
-                  minLength={12} />
+                  placeholder="RFC"
+                  type="text"
+                  value={rfc || ""}
+                />
                 <Form.Control.Feedback type="invalid">
-                  Este campo es obligatorio
+                  {this.state.rfcIsValid ? 'Este campo es obligatorio' : 'Por favor introduzca un RFC valido'}
                 </Form.Control.Feedback>
 
               </Form.Group>
-              <Button onClick={() => this.addFileField()}>Documento (+)</Button>
+              <h2 className="is-invalid">Documentos</h2>
+              {this.state.attachmentIsMissing && <div className="invalid-feedback">
+                Por favor adjuntar almenos un archivo
+              </div>}
+              <Button onClick={() => this.addFileField()}>+</Button>
               {this.state.attachments.map((attachment, index) =>
                 <Row key={`fileInput${index}`}>
                   {!attachment.attachment &&
@@ -200,15 +340,15 @@ export class ProspectModalForm extends Component {
           }
           {!!prospect.id &&
             <Form>
-              <p>Nombre: {name}</p>
-              <p>Apellido paterno: {middle_name}</p>
-              <p>Apellido materno {last_name}</p>
-              <p>Calle: {street}</p>
+              <p className="capitalize">Nombre: {name}</p>
+              <p className="capitalize">Apellido paterno: {middle_name}</p>
+              <p className="capitalize">Apellido materno {last_name}</p>
+              <p className="capitalize">Calle: {street}</p>
               <p>Numero: {ext_number}</p>
-              <p>Colonia: {neighborhood}</p>
+              <p className="capitalize">Colonia: {neighborhood}</p>
               <p>Codigo postal: {zip_code}</p>
               <p>Telefono: {phone_number}</p>
-              <p>RFC: {rfc}</p>
+              <p className="uppercase">RFC: {rfc}</p>
 
               {!!files && files.map(file =>
                 <p key={`file_${file.id}`}>
@@ -217,7 +357,6 @@ export class ProspectModalForm extends Component {
                   </a>
                 </p>
               )}
-              {statusReadOnly.toString()}
               <Form.Group controlId="status">
                 <Form.Select value={status} disabled={statusReadOnly}
                   onChange={handleInputChange}>
@@ -232,13 +371,30 @@ export class ProspectModalForm extends Component {
                   </option>
                 </Form.Select>
               </Form.Group>
-
+              {status === "2" && !statusReadOnly &&
+                <Form.Group controlId="rejection_reason">
+                  <Form.Control
+                    className={(validated && rejection_reason?.length === 0) ? "is-invalid" : ""}
+                    onChange={handleInputChange}
+                    value={rejection_reason}
+                    onKeyDown={this.validateSpecialChars}
+                    placeholder="Motivo de rechazo"
+                    type="text"
+                  />
+                  <Form.Control.Feedback type="invalid">
+                  Este campo es obligatorio
+                </Form.Control.Feedback>
+                </Form.Group>
+              }
+              {status === 2 && statusReadOnly &&
+                <p>{rejection_reason}</p>
+              }
             </Form>
           }
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => this.submit()}>
-            Accept
+            Enviar
           </Button>
         </Modal.Footer>
       </Modal>

@@ -6,11 +6,26 @@ import ProspectTable from './table';
 import { default as Pagination } from '../common/pagination';
 import ProspectModalForm from './modalForm';
 import axios from "axios";
+
+const emptyProspect = {
+  name: "",
+  middle_name: "",
+  last_name: "",
+  street: "",
+  ext_number: "",
+  neighborhood: "",
+  zip_code: "",
+  phone_number: "",
+  rfc: "",
+  rejection_reason : "",
+  files: [],
+  status: 0
+}
 export class ProspectsIndex extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      prospect: {},
+      prospect: emptyProspect,
       showModal: false,
       attachments: []
     }
@@ -31,8 +46,7 @@ export class ProspectsIndex extends Component {
   }
 
   selectedProspect = prospect => {
-    console.log("prospect: ",prospect)
-    console.log("estatus: ",prospect.status !== 1)
+    console.log("selected prospect: ",prospect)
     this.setState({
       prospect: { ...prospect, statusReadOnly: prospect.status !== 0 },
       showModal: true
@@ -40,7 +54,7 @@ export class ProspectsIndex extends Component {
   }
 
   openFormModal = () => {
-    this.setState({ showModal: true, prospect: {} });
+    this.setState({ showModal: true, prospect: emptyProspect });
   }
 
   handleInputChange = e => {

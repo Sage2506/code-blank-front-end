@@ -12,7 +12,7 @@ export class ProspectTable extends Component {
         <thead>
           <tr>
             <th>name</th>
-            <th>phone numbe</th>
+            <th>phone number</th>
             <th>actions</th>
           </tr>
         </thead>
