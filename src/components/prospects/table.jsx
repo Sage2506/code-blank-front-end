@@ -11,9 +11,8 @@ export class ProspectTable extends Component {
       <Table>
         <thead>
           <tr>
-            <th>name</th>
-            <th>phone number</th>
-            <th>actions</th>
+            <th className="capitalize" >nombre</th>
+            <th className="capitalize" >teléfono</th>
           </tr>
         </thead>
         <tbody>

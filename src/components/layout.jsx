@@ -15,7 +15,7 @@ export class Layout extends Component {
           <header className="sticky-top" >
             <Navbar bg="primary" variant="dark" >
               <Nav className="mr-auto">
-                <NavItem><LinkContainer to="/"><Nav.Link ><p>Home</p></Nav.Link></LinkContainer></NavItem>
+                <NavItem><LinkContainer to="/"><Nav.Link ><p>Prospectos</p></Nav.Link></LinkContainer></NavItem>
               </Nav>
             </Navbar>
           </header>

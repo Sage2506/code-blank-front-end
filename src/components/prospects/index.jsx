@@ -5,7 +5,8 @@ import { Button } from 'react-bootstrap';
 import ProspectTable from './table';
 import { default as Pagination } from '../common/pagination';
 import ProspectModalForm from './modalForm';
-import axios from "axios";
+import api from "../../services/codeblank_api";
+
 
 const emptyProspect = {
   name: "",
@@ -17,7 +18,7 @@ const emptyProspect = {
   zip_code: "",
   phone_number: "",
   rfc: "",
-  rejection_reason : "",
+  rejection_reason: "",
   files: [],
   status: 0
 }
@@ -46,7 +47,6 @@ export class ProspectsIndex extends Component {
   }
 
   selectedProspect = prospect => {
-    console.log("selected prospect: ",prospect)
     this.setState({
       prospect: { ...prospect, statusReadOnly: prospect.status !== 0 },
       showModal: true
@@ -101,7 +101,8 @@ export class ProspectsIndex extends Component {
     const data = new FormData();
     data.append('file', attachment.attachment, attachment.attachment_name);
     data.append('prospect_id', this.props.prospect.id);
-    return axios.post('http://localhost:4200/files', data);
+    return api.post('files', data);
+
   }
 
   render() {
@@ -114,7 +115,9 @@ export class ProspectsIndex extends Component {
           handleInputChange={this.handleInputChange}
           submit={this.submit}
           close={this.close} />
-        <Button onClick={() => this.openFormModal()}>Nuevo prospecto</Button>
+        <div className="container text-end">
+          <Button onClick={() => this.openFormModal()} className="mb-3 mt-3 mr-0 capitalize btn-success">nuevo prospecto</Button>
+        </div>
         <ProspectTable selectedProspect={this.selectedProspect} />
         <Pagination pagination={pagination} paginationRequest={getProspects} />
       </div>

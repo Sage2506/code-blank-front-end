@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Modal, Form, Button, Row, Col } from "react-bootstrap";
+import api from "../../services/codeblank_api";
 
 export class ProspectModalForm extends Component {
   constructor(props) {
@@ -29,9 +30,6 @@ export class ProspectModalForm extends Component {
     let { name, middle_name, last_name, street, ext_number, neighborhood, zip_code, phone_number, rfc, status } = this.props.prospect;
     let isValid = true;
     if (!!this.props.prospect.id) {
-      console.log("entered update validation: ", this.props.prospect.rejection_reason.length)
-      console.log("status : ",status)
-      console.log("status type: ",typeof status)
       if (status === "2" && this.props.prospect.rejection_reason.length === 0) { isValid = false }
       if (isValid) {
         this.props.submit([...this.state.attachments])
@@ -179,12 +177,12 @@ export class ProspectModalForm extends Component {
     return (
       <Modal show={showModal} onHide={() => this.handleClose()} >
         <Modal.Header closeButton>
-          <Modal.Title>Formulario</Modal.Title>
+          <Modal.Title>Prospecto</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {!prospect.id &&
             <Form noValidate onSubmit={this.submit} >
-              <Form.Group controlId="name">
+              <Form.Group controlId="name" className="mb-3">
                 <Form.Control
                   className={(validated && name?.length === 0) ? "is-invalid" : ""}
                   maxLength={150}
@@ -199,7 +197,7 @@ export class ProspectModalForm extends Component {
                   Este campo es obligatorio
                 </Form.Control.Feedback>
               </Form.Group>
-              <Form.Group controlId="middle_name">
+              <Form.Group controlId="middle_name" className="mb-3">
                 <Form.Control
                   className={(validated && middle_name?.length === 0) ? "is-invalid" : ""}
                   maxLength={150}
@@ -214,7 +212,7 @@ export class ProspectModalForm extends Component {
                   Este campo es obligatorio
                 </Form.Control.Feedback>
               </Form.Group>
-              <Form.Group controlId="last_name">
+              <Form.Group controlId="last_name" className="mb-3">
                 <Form.Control
                   maxLength={150}
                   onChange={handleInputChange}
@@ -225,7 +223,7 @@ export class ProspectModalForm extends Component {
                   value={last_name || ""}
                 />
               </Form.Group>
-              <Form.Group controlId="street">
+              <Form.Group controlId="street" className="mb-3">
                 <Form.Control
                   className={(validated && street?.length === 0) ? "is-invalid" : ""}
                   maxLength={150}
@@ -240,7 +238,7 @@ export class ProspectModalForm extends Component {
                   Este campo es obligatorio
                 </Form.Control.Feedback>
               </Form.Group>
-              <Form.Group controlId="ext_number">
+              <Form.Group controlId="ext_number" className="mb-3">
                 <Form.Control
                   className={(validated && ext_number?.length === 0) ? "is-invalid" : ""}
                   maxLength={150}
@@ -255,7 +253,7 @@ export class ProspectModalForm extends Component {
                   Este campo es obligatorio
                 </Form.Control.Feedback>
               </Form.Group>
-              <Form.Group controlId="neighborhood">
+              <Form.Group controlId="neighborhood" className="mb-3">
                 <Form.Control
                   className={(validated && neighborhood?.length === 0) ? "is-invalid" : ""}
                   maxLength={150}
@@ -270,7 +268,7 @@ export class ProspectModalForm extends Component {
                   Este campo es obligatorio
                 </Form.Control.Feedback>
               </Form.Group>
-              <Form.Group controlId="zip_code">
+              <Form.Group controlId="zip_code" className="mb-3">
                 <Form.Control
                   className={(validated && zip_code?.length === 0) ? "is-invalid" : ""}
                   maxLength={10}
@@ -285,7 +283,7 @@ export class ProspectModalForm extends Component {
                   Este campo es obligatorio
                 </Form.Control.Feedback>
               </Form.Group>
-              <Form.Group controlId="phone_number">
+              <Form.Group controlId="phone_number" className="mb-3">
                 <Form.Control
                   className={(validated && phone_number?.length < 7) ? "is-invalid" : ""}
                   maxLength={10}
@@ -301,7 +299,7 @@ export class ProspectModalForm extends Component {
                   Este campo es obligatorio
                 </Form.Control.Feedback>
               </Form.Group>
-              <Form.Group controlId="rfc">
+              <Form.Group controlId="rfc" className="mb-3">
                 <Form.Control
                   className={(validated && !this.state.rfcIsValid) ? "is-invalid" : ""}
                   maxLength={13}
@@ -320,20 +318,20 @@ export class ProspectModalForm extends Component {
               {this.state.attachmentIsMissing && <div className="invalid-feedback">
                 Por favor adjuntar almenos un archivo
               </div>}
-              <Button onClick={() => this.addFileField()}>+</Button>
+              <Button onClick={() => this.addFileField()} className="mb-3" >Agregar</Button>
               {this.state.attachments.map((attachment, index) =>
                 <Row key={`fileInput${index}`}>
                   {!attachment.attachment &&
-                    <Form.Group as={Col} xs={8} controlId="attachment" className="mb-3">
+                    <Form.Group as={Col} xs={8} controlId="attachment" className="mb-3" >
                       <Form.Control type="file" onChange={(event) => this.handleFileInputChange(event, index)} />
                     </Form.Group>
                   }
                   {!!attachment.attachment_name &&
-                    <Form.Group as={Col} xs={8} controlId="attachment" className="mb-3">
-                      <Form.Control value={attachment.attachment_name} readOnly className="mb-3" />
+                    <Form.Group as={Col} xs={8} controlId="attachment" className="mb-3" >
+                      <Form.Control value={attachment.attachment_name} readOnly />
                     </Form.Group>
                   }
-                  <Button as={Col} xs={4} onClick={() => this.removeFileField(index)}> remover</Button>
+                  <Button as={Col} xs={4} className="mb-3 btn-danger" onClick={() => this.removeFileField(index)}>Eliminar</Button>
                 </Row>
               )}
             </Form>
@@ -349,10 +347,10 @@ export class ProspectModalForm extends Component {
               <p>Codigo postal: {zip_code}</p>
               <p>Telefono: {phone_number}</p>
               <p className="uppercase">RFC: {rfc}</p>
-
+              <p className="capitalize">documentos:</p>
               {!!files && files.map(file =>
                 <p key={`file_${file.id}`}>
-                  <a href={`http://localhost:4200/uploads/${file.name}`} target="_blank" >
+                  <a href={`${api.baseURL}uploads/${file.name}`} target="_blank" >
                     {file.name}
                   </a>
                 </p>
@@ -393,7 +391,7 @@ export class ProspectModalForm extends Component {
           }
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => this.submit()}>
+          <Button variant="success" onClick={() => this.submit()}>
             Enviar
           </Button>
         </Modal.Footer>
