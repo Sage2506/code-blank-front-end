@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Modal, Form, Button, Row, Col } from "react-bootstrap";
-import api from "../../services/codeblank_api";
+import { baseURL } from "../../services/codeblank_api";
 
 export class ProspectModalForm extends Component {
   constructor(props) {
@@ -54,8 +54,6 @@ export class ProspectModalForm extends Component {
         rfc?.length < 12) {
         isValid = false
       }
-
-
       const rfcRegExp = /^([A-Z,Ñ,&]{3,4}([0-9]{2})(0[1-9]|1[0-2])(0[1-9]|1[0-9]|2[0-9]|3[0-1])[A-Z|\d]{3})$/;
       const testResult = rfcRegExp.test(rfc)
       if (testResult) {
@@ -270,7 +268,7 @@ export class ProspectModalForm extends Component {
               </Form.Group>
               <Form.Group controlId="zip_code" className="mb-3">
                 <Form.Control
-                  className={(validated && zip_code?.length === 0) ? "is-invalid" : ""}
+                  className={(validated && (zip_code?.length === 0 || zip_code?.length < 5)) ? "is-invalid" : ""}
                   maxLength={10}
                   onChange={handleInputChange}
                   onKeyDown={this.validateNumbersOnly}
@@ -350,7 +348,7 @@ export class ProspectModalForm extends Component {
               <p className="capitalize">documentos:</p>
               {!!files && files.map(file =>
                 <p key={`file_${file.id}`}>
-                  <a href={`${api.baseURL}uploads/${file.name}`} target="_blank" >
+                  <a href={`${baseURL}uploads/${file.name}`} target="_blank" >
                     {file.name}
                   </a>
                 </p>
@@ -380,8 +378,8 @@ export class ProspectModalForm extends Component {
                     type="text"
                   />
                   <Form.Control.Feedback type="invalid">
-                  Este campo es obligatorio
-                </Form.Control.Feedback>
+                    Este campo es obligatorio
+                  </Form.Control.Feedback>
                 </Form.Group>
               }
               {status === 2 && statusReadOnly &&
@@ -391,7 +389,7 @@ export class ProspectModalForm extends Component {
           }
         </Modal.Body>
         <Modal.Footer>
-        <Button variant="danger" onClick={() => this.handleClose()}>
+          <Button variant="danger" onClick={() => this.handleClose()}>
             Salir
           </Button>
           <Button variant="success" onClick={() => this.submit()}>

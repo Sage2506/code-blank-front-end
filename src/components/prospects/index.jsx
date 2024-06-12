@@ -5,7 +5,8 @@ import { Button } from 'react-bootstrap';
 import ProspectTable from './table';
 import { default as Pagination } from '../common/pagination';
 import ProspectModalForm from './modalForm';
-import api from "../../services/codeblank_api";
+import api, {baseURL} from "../../services/codeblank_api";
+import axios from "axios";
 
 
 const emptyProspect = {
@@ -99,10 +100,13 @@ export class ProspectsIndex extends Component {
 
   createFilePromise = attachment => {
     const data = new FormData();
-    data.append('file', attachment.attachment, attachment.attachment_name);
+    data.append('file', attachment.attachment);
     data.append('prospect_id', this.props.prospect.id);
-    return api.post('files', data);
-
+    return axios.post(baseURL + 'files', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
   }
 
   render() {
